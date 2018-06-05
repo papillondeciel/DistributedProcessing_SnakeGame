@@ -6,9 +6,9 @@ Queue::Queue()
 {
 }
 
-Data Queue::popFirst()
+Data *Queue::popFirst()
 {
-	Data temp;
+	Data *temp = new Data();
 	temp = q.front();
 	q.pop();
 	return temp;
@@ -21,7 +21,7 @@ bool Queue::empty()
 	return result;
 }
 
-void Queue::push(Data d)
+void Queue::push(Data *d)
 {
 	q.push(d);
 }

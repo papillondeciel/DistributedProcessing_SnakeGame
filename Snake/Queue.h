@@ -8,12 +8,12 @@ using namespace std;
 
 class Queue
 {
-	queue<Data> q;
+	queue<Data*> q;
 public:
 	Queue();
-	Data popFirst();
+	Data * popFirst();
 	bool empty();
-	void push(Data);
+	void push(Data *);
 	~Queue();
 };
 

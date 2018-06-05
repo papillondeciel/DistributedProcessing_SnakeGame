@@ -4,34 +4,34 @@
 
 Direction::Direction()
 {
-	this->value = this->random();
+	this->value = this->randomDestination();
 }
 
-Direction::direction_t Direction::getDirection()
+Direction::destination_t Direction::getDestination()
 {
 	return this->value;
 }
 
-Direction::direction_t Direction::random()
+Direction::destination_t Direction::randomDestination()
 {
-	direction_t result;
-	result = direction_t(rand() % 4 + 1);
+	destination_t result;
+	result = destination_t(rand() % 4 + 1);
 	return result;
 }
 
-void Direction::setDirection(direction_t dir)
+void Direction::setDestination(destination_t dir)
 {
 	this->value = dir;
 }
 
-Direction::operator int()
-{
-	return int(value);
-}
+//Direction::operator int()
+//{
+//	return int(value);
+//}
 
 void Direction::convertFromInt(int integer)
 {
-	this->value = direction_t(integer);
+	this->value = destination_t(integer);
 }
 
 Direction::~Direction()

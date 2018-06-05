@@ -55,7 +55,7 @@ void Client::start()
 void Client::processingReceivedPackets()
 {
 	bool empty = false;
-	Data data;
+	Data *data = new Data();
 	while (true)
 	{
 		//std::this_thread::sleep_for(std::chrono::seconds(DELAY_IN_SHOW_LOGS));
@@ -76,13 +76,16 @@ void Client::processingReceivedPackets()
 			data.writeMatrix();
 			cout << " & " << endl;
 			data.writeDirectionsTable();*/
-			cout << "C procesuje dane ---> i tu kminie rzeczy" << endl;
+			///cout << "C: procesuje dane ---> i tu kminie rzeczy" << endl;
 			if (this->myID==0)
 			{
 				cout << "C: odebralem info inicjalizyjace" << endl;
 				///odbieram paczke inizjalizujaca
-				this->myID = data.getClientIDinitializingData();
-				cout << "C: moje ID: " << this->myID << endl;
+				this->myID = data->getClientIDinitializingData();
+				cout << "C: moje ID: " << this->myID /*<< " " << data->getClientIDinitializingData()*/ << endl;
+				this->oldDirection.setDestination(data->getInitDirection_forClient().getDestination());
+				this->oldDirection.position = data->getInitDirection_forClient().position;
+				this->newDirection = this->oldDirection;
 			}
 			else
 			{
@@ -98,33 +101,35 @@ void Client::processingReceivedPackets()
 
 void Client::receivingPackets()
 {
-	Data receiveData;
-	sf::Packet pack;
+	Data *receiveData = new Data();
+	
 	while (true)
 	{
-
+		sf::Packet pack;
 		if (this->socket.receive(pack)==sf::Socket::Done)
 		{
-			if (!init)
+			if (!this->init)
 			{
-				receiveData.unpack(pack, Data::INITfromSERVER_enum);
-				init = true;
+				receiveData->unpack(pack, Data::INITfromSERVER_enum);
+				//cout << "C: odebrane ID: " << receiveData->getClientIDinitializingData() << endl<< endl;
+				this->init = true;
 			}
 			else
-				receiveData.unpack(pack, Data::fromSERVER_toCLIENT_enum);
+				receiveData->unpack(pack, Data::fromSERVER_toCLIENT_enum);
 
 			//sf::Lock lock(this->mutex); 
 			this->mutex->lock();
 			this->receivedPacketsQueue.push(receiveData);
 			this->mutex->unlock();
+
 		}		
 	}
 }
 
 void Client::sendingPackets()
 {
-	sf::Packet pack;
-	Data sendData;
+	
+	Data * sendData = new Data();
 	bool empty = false;
 
 
@@ -142,8 +147,8 @@ void Client::sendingPackets()
 			sendData = this->sentPacketsQueue.popFirst();// front();
 			//this->sentPacketsQueue.pop();
 			this->mutex->unlock();
-
-			sendData.pack(pack, Data::fromCLIENT_toSERVER_enum);
+			sf::Packet pack;
+			sendData->pack(pack, Data::fromCLIENT_toSERVER_enum);
 			//	pak << d.text << d.num;
 				if (socket.send(pack) != sf::Socket::Done)
 				{
@@ -165,29 +170,6 @@ void Client::sendingPackets()
 
 void Client::processingPlayerInteractions()
 {
-	/*int c;
-	while (true)
-	{
-		c = 0;
-		switch ((c = _getch())) {
-		case KEY_UP:
-			cout << endl << "Up" << endl;//key up
-			break;
-		case KEY_DOWN:
-			cout << endl << "Down" << endl;   // key down
-			break;
-		case KEY_LEFT:
-			cout << endl << "Left" << endl;  // key left
-			break;
-		case KEY_RIGHT:
-			cout << endl << "Right" << endl;  // key right
-			break;
-		default:
-			cout << endl << "null" << endl;  // not arrow
-			break;
-		}
-
-	}*/
 	HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
 	DWORD NumInputs = 0;
 	DWORD InputsRead = 0;
@@ -195,9 +177,9 @@ void Client::processingPlayerInteractions()
 
 	INPUT_RECORD irInput;
 
-	Direction::direction_t direct;
+	Direction::destination_t direct;
 	bool setNewDirect = false;
-	Data tempData;
+	Data *tempData = new Data();
 	Direction tempDir;
 
 	GetNumberOfConsoleInputEvents(hInput, &NumInputs);
@@ -207,46 +189,47 @@ void Client::processingPlayerInteractions()
 		ReadConsoleInput(hInput, &irInput, 1, &InputsRead);
 		if (irInput.Event.KeyEvent.bKeyDown)
 		{
+			this->oldDirection = this->newDirection;
 			switch (irInput.Event.KeyEvent.wVirtualKeyCode)
 			{
 			case VK_ESCAPE:
-				puts("Escape");
+				cout << "Escape" << endl;
 				break;
 
 			case VK_LEFT:
-				puts("Left");
-				direct = Direction::direction_t::LEFT;
+				cout << "Left" << endl;
+				direct = Direction::destination_t::LEFT;
 				setNewDirect = true;
 				break;
 
 			case VK_UP:
-				puts("Up");
-				direct = Direction::direction_t::UP;
+				cout << "Up" << endl;
+				direct = Direction::destination_t::UP;
 				setNewDirect = true;
 				break;
 
 			case VK_RIGHT:
-				puts("Right");
-				direct = Direction::direction_t::RIGHT;
+				cout << "Right" << endl;
+				direct = Direction::destination_t::RIGHT;
 				setNewDirect = true;
 				break;
 
 			case VK_DOWN:
-				puts("Down");
-				direct = Direction::direction_t::DOWN;
+				cout << "Down" << endl;
+				direct = Direction::destination_t::DOWN;
 				setNewDirect = true;
 				break;
 			}
+			
 			if (setNewDirect)
 			{
-				tempDir.setDirection(direct);
-				tempData.setFromClientToServerData(this->myID, { 0,0 }, tempDir, tempDir);
+				this->newDirection.setDestination(direct);
+				tempData->setFromClientToServerData(this->myID, { 0,0 }, this->oldDirection, this->newDirection);
 				this->mutex->lock();
 				this->sentPacketsQueue.push(tempData);
 				this->mutex->unlock();
 				setNewDirect = false;
 			}
-
 		}
 	}
 }

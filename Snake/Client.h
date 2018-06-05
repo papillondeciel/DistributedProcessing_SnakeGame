@@ -16,7 +16,10 @@ class Client
 	bool init;
 	unsigned int myID;
 
-	Data globalData;
+	//Data globalData;
+
+	Direction newDirection;
+	Direction oldDirection;
 
 	Queue receivedPacketsQueue;
 	Queue sentPacketsQueue;

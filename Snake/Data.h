@@ -14,14 +14,14 @@ class Data
 
 	struct {
 		unsigned int clientID;
-		Direction::point_t position;
+		//Direction::point_t position;
 		Direction randomDirection;
 
 	}initializingData;
 
 	struct {
 		unsigned int clientID;
-		Direction::point_t positionBeforeTurn;
+		//Direction::point_t positionBeforeTurn;
 		Direction oldDirection;
 		Direction newDirection;
 	}fromClientToServerData;
@@ -47,13 +47,17 @@ public:
 	//Gettery--------------------------------------------
 	//fromServerToClientData--------------
 	unsigned int getCellValueFromBoardMatrix(Direction::point_t field);
-	Direction getPlayerDirection(unsigned int playerNumber);
+	Direction getPlayerDirection_forServer(unsigned int playerNumber);
 	Direction::point_t getPlayerHeadPosition(unsigned int playerNumber);
 	//initializingData--------------------
 	unsigned int getClientIDinitializingData();
+	Direction getInitDirection_forClient();
+
+	//fromClientToServerData--------------------
 	unsigned int getClientIDfromClientToServerData();
 	//Direction::point_t getPosition();
-	Direction getNewDirection();
+	Direction getNewDirection_forClient();
+	Direction getOldDirection_forClient();
 
 
 	void writeMatrix();

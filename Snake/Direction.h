@@ -9,26 +9,27 @@ public:
 		RIGHT = 2,
 		DOWN = 3,
 		LEFT = 4
-	} direction_t;
+	} destination_t;
 
 	struct point_t
 	{
 		unsigned int x;
 		unsigned int y;
-	};
+	}position;
 
 private:
-	direction_t value;
+	destination_t value;
 
 public:
 
 	Direction();
 
-	direction_t getDirection();
-	direction_t random();
-	void setDirection(direction_t dir);
+	destination_t getDestination();
+	destination_t randomDestination();
+	void setDestination(destination_t dir);
 
-	operator int();
+
+	//operator int();
 	void convertFromInt(int);
 
 	~Direction();

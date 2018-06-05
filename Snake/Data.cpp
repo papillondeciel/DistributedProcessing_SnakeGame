@@ -25,13 +25,13 @@ Data::Data()
 	///setting null values to control data, in properly running this segment of code is unuseful,
 	///because before sending initializeMessage to Client, Server must set specialized values for each Client
 	this->initializingData.clientID = 0;
-	this->initializingData.position = {0,0};
+	this->initializingData.randomDirection.position = {0,0};
 
 	//initialization struct "fromClientToServerData"
 	///setting null values to control data, in properly running this segment of code is unuseful,
 	///because before sending messageToServer Client must set specialized values depends on its own state
 	this->fromClientToServerData.clientID = 0;
-	this->fromClientToServerData.positionBeforeTurn = {0,0};
+	//this->fromClientToServerData.positionBeforeTurn = {0,0};
 
 }
 
@@ -58,14 +58,14 @@ void Data::setFromServerToClientData(unsigned int ** matrix, Direction * dirTab)
 void Data::setInitializingData(unsigned int cID, Direction::point_t pos, Direction dir)
 {
 	this->initializingData.clientID = cID;
-	this->initializingData.position = pos;
+	this->initializingData.randomDirection.position = pos;
 	this->initializingData.randomDirection = dir;
 }
 
 void Data::setFromClientToServerData(unsigned int cID, Direction::point_t pos, Direction oldDir, Direction newDir)
 {
 	this->fromClientToServerData.clientID = cID;
-	this->fromClientToServerData.positionBeforeTurn = pos;
+	//this->fromClientToServerData.positionBeforeTurn = pos;
 	this->fromClientToServerData.oldDirection = oldDir;
 	this->fromClientToServerData.newDirection = newDir;
 }
@@ -80,6 +80,13 @@ unsigned int Data::getCellValueFromBoardMatrix(Direction::point_t field)
 	return result;
 }
 
+Direction Data::getPlayerDirection_forServer(unsigned int playerNumber)
+{
+	Direction result;
+	result = this->fromServerToClientData.directionsTable[playerNumber - 1];
+	return result;
+}
+
 Direction::point_t Data::getPlayerHeadPosition(unsigned int playerNumber)
 {
 	Direction::point_t result;
@@ -91,29 +98,29 @@ Direction::point_t Data::getPlayerHeadPosition(unsigned int playerNumber)
 
 unsigned int Data::getClientIDinitializingData()
 {
-	return this->fromClientToServerData.clientID;
+	
+	return this->initializingData.clientID;
+}
+
+Direction Data::getInitDirection_forClient()
+{
+	return this->initializingData.randomDirection;
 }
 
 unsigned int Data::getClientIDfromClientToServerData()
 {
-	return this->initializingData.clientID;
+	return this->fromClientToServerData.clientID;
 }
 
-Direction Data::getNewDirection()
+Direction Data::getNewDirection_forClient()
 {
 	return this->fromClientToServerData.newDirection;
 }
 
-Direction Data::getPlayerDirection(unsigned int playerNumber)
+Direction Data::getOldDirection_forClient()
 {
-	Direction result;
-	result = this->fromServerToClientData.directionsTable[playerNumber - 1];
-	return result;
+	return this->fromClientToServerData.oldDirection;
 }
-
-
-
-
 
 
 void Data::writeMatrix()
@@ -133,7 +140,9 @@ void Data::writeDirectionsTable()
 	
 	for (int x = 0; x < BOARD_SIZE; x++)
 	{
-		cout << this->fromServerToClientData.directionsTable[x] << " ";
+		//nie wiem czy tutaj sie dobrze wypisuje
+		//na pewno jest to kwestia enuma
+		cout << this->fromServerToClientData.directionsTable[x].getDestination() << " ";
 	}
 	cout << endl;
 }
@@ -152,21 +161,23 @@ void Data::pack(sf::Packet & package, enum Data::dataType type)
 		}
 		for (int i = 0; i < MAX_NUM_OF_CLIENTS; i++)
 		{
-			package << (int)(this->fromServerToClientData.directionsTable[i]);
+			package << (int)(this->fromServerToClientData.directionsTable[i].getDestination());
 		}
 		break;
 	case Data::INITfromSERVER_enum:
 		package << this->initializingData.clientID;
-		package << this->initializingData.position.x;
-		package << this->initializingData.position.y;
-		package << (int)(this->initializingData.randomDirection);
+		package << this->initializingData.randomDirection.position.x;
+		package << this->initializingData.randomDirection.position.y;
+		package << (int)(this->initializingData.randomDirection.getDestination());
 		break;
 	case Data::fromCLIENT_toSERVER_enum:
 		package << this->fromClientToServerData.clientID;
-		package << this->fromClientToServerData.positionBeforeTurn.x;
-		package << this->fromClientToServerData.positionBeforeTurn.y;
-		package << (int)(this->fromClientToServerData.oldDirection);
-		package << (int)(this->fromClientToServerData.newDirection);
+		package << this->fromClientToServerData.oldDirection.position.x;
+		package << this->fromClientToServerData.oldDirection.position.y;
+		package << (int)(this->fromClientToServerData.oldDirection.getDestination());
+		package << this->fromClientToServerData.newDirection.position.x;
+		package << this->fromClientToServerData.newDirection.position.y;
+		package << (int)(this->fromClientToServerData.newDirection.getDestination());
 		break;
 	default:
 		break;
@@ -196,17 +207,19 @@ void Data::unpack(sf::Packet & package, enum Data::dataType type)
 		break;
 	case Data::INITfromSERVER_enum:
 		package >> this->initializingData.clientID;
-		package >> this->initializingData.position.x;
-		package >> this->initializingData.position.y;
+		package >> this->initializingData.randomDirection.position.x;
+		package >> this->initializingData.randomDirection.position.y;
 		package >> tempNumber;
 		this->initializingData.randomDirection.convertFromInt(tempNumber);
 		break;
 	case Data::fromCLIENT_toSERVER_enum:
 		package >> this->fromClientToServerData.clientID;
-		package >> this->fromClientToServerData.positionBeforeTurn.x;
-		package >> this->fromClientToServerData.positionBeforeTurn.y;
+		package >> this->fromClientToServerData.oldDirection.position.x;
+		package >> this->fromClientToServerData.oldDirection.position.y;
 		package >> tempNumber;
 		this->fromClientToServerData.oldDirection.convertFromInt(tempNumber);
+		package >> this->fromClientToServerData.newDirection.position.x;
+		package >> this->fromClientToServerData.newDirection.position.y;
 		package >> tempNumber;
 		this->fromClientToServerData.newDirection.convertFromInt(tempNumber);
 		break;
