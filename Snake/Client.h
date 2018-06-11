@@ -4,6 +4,9 @@
 #include <queue>
 #include "ownTypes.h"
 #include "Queue.h"
+#include "FromClientToServerData.h"
+#include "FromServerToClientData.h"
+#include "InitializingData.h"
 
 using namespace std;
 
@@ -17,6 +20,7 @@ class Client
 	unsigned int myID;
 
 	//Data globalData;
+	FromServerToClientData globalData;
 
 	Direction newDirection;
 	Direction oldDirection;
@@ -28,7 +32,8 @@ class Client
 		processingReceivedPacketsThread,
 		receivingPacketsThread,
 		sendingPacketsThread,
-		processingPlayerInteractionsThread;
+		processingPlayerInteractionsThread,
+		drawingThread;
 
 	sf::Mutex *mutex;
 
@@ -39,6 +44,7 @@ class Client
 	void receivingPackets();
 	void sendingPackets();
 	void processingPlayerInteractions();
+	void drawing();
 
 public:
 	Client(unsigned int);
@@ -47,4 +53,3 @@ public:
 
 	~Client();
 };
-

@@ -13,8 +13,8 @@ public:
 
 	struct point_t
 	{
-		unsigned int x;
-		unsigned int y;
+		int x;
+		int y;
 	}position;
 
 private:
@@ -34,4 +34,3 @@ public:
 
 	~Direction();
 };
-

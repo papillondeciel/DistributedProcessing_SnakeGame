@@ -30,7 +30,16 @@
     <ClCompile Include="Direction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Data.cpp">
+    <ClCompile Include="InitializingData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FromServerToClientData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FromClientToServerData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="!Data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,7 +59,19 @@
     <ClInclude Include="Direction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Data.h">
+    <ClInclude Include="FromServerToClientData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InitializingData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FromClientToServerData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="!Data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

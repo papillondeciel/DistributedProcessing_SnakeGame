@@ -1,6 +1,6 @@
 #pragma once
 #include <queue>
-#include "Data.h"
+#include "BaseData.h"
 #include "ownTypes.h"
 
 using namespace std;
@@ -8,12 +8,11 @@ using namespace std;
 
 class Queue
 {
-	queue<Data*> q;
+	queue<BaseData*> q;
 public:
 	Queue();
-	Data * popFirst();
+	BaseData * popFirst();
 	bool empty();
-	void push(Data *);
+	void push(BaseData *);
 	~Queue();
 };
-

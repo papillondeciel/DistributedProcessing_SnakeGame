@@ -1,14 +1,14 @@
 #include "Queue.h"
-#include "Data.h"
+#include "BaseData.h"
 
 
 Queue::Queue()
 {
 }
 
-Data *Queue::popFirst()
+BaseData* Queue::popFirst()
 {
-	Data *temp = new Data();
+	BaseData* temp;// = new DataBase();
 	temp = q.front();
 	q.pop();
 	return temp;
@@ -21,7 +21,7 @@ bool Queue::empty()
 	return result;
 }
 
-void Queue::push(Data *d)
+void Queue::push(BaseData *d)
 {
 	q.push(d);
 }
