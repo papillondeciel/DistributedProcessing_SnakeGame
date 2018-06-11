@@ -16,6 +16,7 @@ class Client
 	sf::TcpSocket socket; // tworzymy gniazdo klienta
 	sf::IpAddress ip;// = "localhost";
 
+	bool isAlive;
 	bool init;
 	unsigned int myID;
 

@@ -10,6 +10,8 @@
 #define DELAY_IN_SHOW_LOGS 2 // sek
 #define BOARD_SIZE 32
 
+#define SPEED 10000000.0
+
 #define KEY_UP 72
 #define KEY_DOWN 80
 #define KEY_LEFT 75

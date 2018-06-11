@@ -18,6 +18,7 @@ using namespace std;
 
 
 Client::Client(unsigned int port) :
+	isAlive(true),
 	init(false),
 	myID(0),
 	processingReceivedPacketsThread(&Client::processingReceivedPackets, this),
@@ -60,7 +61,7 @@ void Client::processingReceivedPackets()
 {
 	bool empty = false;
 	InitializingData *data;// = new Data();
-	while (true)
+	while (isAlive)
 	{
 		//std::this_thread::sleep_for(std::chrono::seconds(DELAY_IN_SHOW_LOGS));
 		//sf::Lock lock(this->mutex); 
@@ -99,6 +100,9 @@ void Client::processingReceivedPackets()
 				globalData = *regularData;
 				//od teraz mozemy zczytywac plansze i wszystkie dane o kierunkach i polozenu glow z globalData
 				//TODO - reakcja na smierc
+				{
+					//this->isAlive = false;
+				}
 			}
 			//" od adres: " << temp2.remoteAdressOfClient << " port:" << temp2.remotePortOfClient << endl;
 		}
@@ -109,7 +113,7 @@ void Client::processingReceivedPackets()
 void Client::receivingPackets()
 {
 	BaseData *receiveData;
-	while (true)
+	while (isAlive)
 	{
 		sf::Packet pack;
 		if (this->socket.receive(pack) == sf::Socket::Done)
@@ -145,7 +149,7 @@ void Client::sendingPackets()
 	bool empty = false;
 
 
-	while (true)
+	while (isAlive)
 	{
 		//std::this_thread::sleep_for(std::chrono::seconds(DELAY_IN_SHOW_LOGS));
 		//sf::Lock lock(this->mutex);
@@ -196,7 +200,7 @@ void Client::processingPlayerInteractions()
 
 	GetNumberOfConsoleInputEvents(hInput, &NumInputs);
 
-	while (true)
+	while (isAlive)
 	{
 		ReadConsoleInput(hInput, &irInput, 1, &InputsRead);
 		if (irInput.Event.KeyEvent.bKeyDown)
@@ -209,27 +213,39 @@ void Client::processingPlayerInteractions()
 				break;
 
 			case VK_LEFT:
-				cout << "Left" << endl;
-				direct = Direction::destination_t::LEFT;
-				setNewDirect = true;
+				if (this->oldDirection.getDestination() != Direction::destination_t::RIGHT)
+				{
+					cout << "Left" << endl;
+					direct = Direction::destination_t::LEFT;
+					setNewDirect = true;
+				}
 				break;
 
 			case VK_UP:
-				cout << "Up" << endl;
-				direct = Direction::destination_t::UP;
-				setNewDirect = true;
+				if (this->oldDirection.getDestination() != Direction::destination_t::DOWN)
+				{
+					cout << "Up" << endl;
+					direct = Direction::destination_t::UP;
+					setNewDirect = true;
+				}
 				break;
 
 			case VK_RIGHT:
-				cout << "Right" << endl;
-				direct = Direction::destination_t::RIGHT;
-				setNewDirect = true;
+				if (this->oldDirection.getDestination() != Direction::destination_t::LEFT)
+				{
+					cout << "Right" << endl;
+					direct = Direction::destination_t::RIGHT;
+					setNewDirect = true;
+				}
 				break;
 
 			case VK_DOWN:
-				cout << "Down" << endl;
-				direct = Direction::destination_t::DOWN;
-				setNewDirect = true;
+				if (this->oldDirection.getDestination() != Direction::destination_t::UP)
+				{
+					cout << "Down" << endl;
+					direct = Direction::destination_t::DOWN;
+					setNewDirect = true;
+				}
 				break;
 			}
 
@@ -258,7 +274,14 @@ void Client::drawing()
 	sf::Color snakeOutlineColor = sf::Color::White;
 	sf::Color backgroundColor = sf::Color::Green;
 
-	const float speed = 10;
+
+	while (!this->init)//TODO_DONE tutaj poczekac az dostaniemy info inicjalizujace !!
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+
+	const float speed = SPEED;
 	sf::Clock clock;
 	sf::Time t1 = clock.getElapsedTime();
 
@@ -272,68 +295,66 @@ void Client::drawing()
 	segment.setOutlineColor(snakeOutlineColor);
 	
 
-	//TODO tutaj poczekac az dostaniemy info inicjalizujace !!
-
 	while (window.isOpen())
 	{
-
-		while (t1.asSeconds() >= 1 / speed)
+		if (isAlive)
 		{
-			t1 = clock.getElapsedTime(); //waiting loop
-		}
-		clock.restart();
-
-
-		//petla do obliczenia nowej pozycji wezy:
-		for (int i = 0; i < MAX_NUM_OF_CLIENTS; i++)
-		{
-			this->mutex->lock();
-			Direction::point_t headposition = globalData.getPlayerHeadPosition(i + 1);
-			Direction::point_t newHeadposition = headposition;
-			Direction dir = globalData.getPlayerDirection_forServer(i + 1);
-			this->mutex->unlock();
-			switch (dir.getDestination())
+			while (t1.asSeconds() >= 1 / speed)
 			{
-			case Direction::destination_t::UP:
-				newHeadposition.y--; break;
-			case Direction::destination_t::DOWN:
-				newHeadposition.y++; break;
-			case Direction::destination_t::LEFT:
-				newHeadposition.x--; break;
-			case Direction::destination_t::RIGHT: default:
-				newHeadposition.x++; break;
+				t1 = clock.getElapsedTime(); //waiting loop
 			}
-			//kolizja z krawedzią:
-			if (newHeadposition.x < 0 || newHeadposition.y < 0 || newHeadposition.x >= BOARD_SIZE || newHeadposition.y >= BOARD_SIZE);
-			else
+			clock.restart();
+
+
+			//petla do obliczenia nowej pozycji wezy:
+			for (int i = 0; i < MAX_NUM_OF_CLIENTS; i++)
 			{
-				this->mutex->lock(); //not sure if globalData needs mutex protection
-				globalData.setPlayerHeadPosition(i + 1, newHeadposition);
-				globalData.setPlayerHeadOnBoard(i + 1, newHeadposition);
+				this->mutex->lock();
+				Direction::point_t headposition = globalData.getPlayerHeadPosition(i + 1);
+				Direction::point_t newHeadposition = headposition;
+				Direction dir = globalData.getPlayerDirection_forServer(i + 1);
 				this->mutex->unlock();
-			}
-		}
-
-
-		//drawing map
-		window.clear(backgroundColor);
-		for (int i = 0; i < BOARD_SIZE; i++)
-		{
-			for (int j = 0; j < BOARD_SIZE; j++)
-			{
-				Direction::point_t point = { i, j };
-				unsigned int cellValue = globalData.getCellValueFromBoardMatrix(point);
-				if (cellValue != 0) //TODO dodac rozroznianie graczy
+				switch (dir.getDestination())
 				{
-					segment.setPosition(sf::Vector2f(i*body_size, j*body_size));
-					window.draw(segment);
+				case Direction::destination_t::UP:
+					newHeadposition.y--; break;
+				case Direction::destination_t::DOWN:
+					newHeadposition.y++; break;
+				case Direction::destination_t::LEFT:
+					newHeadposition.x--; break;
+				case Direction::destination_t::RIGHT: default:
+					newHeadposition.x++; break;
 				}
-								
+				//kolizja z krawedzią:
+				if (newHeadposition.x < 0 || newHeadposition.y < 0 || newHeadposition.x >= BOARD_SIZE || newHeadposition.y >= BOARD_SIZE);
+				else
+				{
+					this->mutex->lock(); //not sure if globalData needs mutex protection
+					this->globalData.setPlayerHeadPosition(i + 1, newHeadposition);
+					this->globalData.setPlayerHeadOnBoard(i + 1, newHeadposition);
+					this->mutex->unlock();
+				}
 			}
+
+
+			//drawing map
+			window.clear(backgroundColor);
+			for (int i = 0; i < BOARD_SIZE; i++)
+			{
+				for (int j = 0; j < BOARD_SIZE; j++)
+				{
+					Direction::point_t point = { i, j };
+					unsigned int cellValue = globalData.getCellValueFromBoardMatrix(point);
+					if (cellValue != 0) //TODO dodac rozroznianie graczy
+					{
+						segment.setPosition(sf::Vector2f(i*body_size, j*body_size));
+						window.draw(segment);
+					}
+
+				}
+			}
+			window.display();
 		}
-
-		window.display();
-
 	}
 }
 
